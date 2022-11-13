@@ -3,8 +3,10 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from Model import Model
+from CustomDataGen import CustomDataGen
 
 # Structure des données au format hdf5
 # <HDF5 group "/001121a05" (3 members)>
@@ -18,28 +20,28 @@ from Model import Model
 
 
 
-def read_data_from_hdf5(path):
-    f = h5py.File(path, "r")
-
-    key0, *_ = f.keys()
-    group0 = f[key0]
-    key1_H1, key1_L1, key1_frequency_Hz = group0.keys()
-    group1_H1 = group0[key1_H1]
-    group1_L1 = group0[key1_L1]
-
-    key2_H1_SFTs, key2_H1_timestamps_GPS = group1_H1.keys()
-    key2_L1_SFTs, key2_L1_timestamps_GPS = group1_L1.keys()
-
-    # Data
-    dataset_H1_SFTs = group1_H1[key2_H1_SFTs]
-    dataset_H1_timestamps_GPS = group1_H1[key2_H1_timestamps_GPS]
-
-    dataset_L1_SFTs = group1_L1[key2_L1_SFTs]
-    dataset_L1_timestamps_GPS = group1_L1[key2_L1_timestamps_GPS]
-
-    dataset_frequency_Hz = group0[key1_frequency_Hz]
-
-    return dataset_H1_SFTs, dataset_H1_timestamps_GPS, dataset_L1_SFTs, dataset_L1_timestamps_GPS, dataset_frequency_Hz
+# def read_data_from_hdf5(path):
+#     f = h5py.File(path, "r")
+#
+#     key0, *_ = f.keys()
+#     group0 = f[key0]
+#     key1_H1, key1_L1, key1_frequency_Hz = group0.keys()
+#     group1_H1 = group0[key1_H1]
+#     group1_L1 = group0[key1_L1]
+#
+#     key2_H1_SFTs, key2_H1_timestamps_GPS = group1_H1.keys()
+#     key2_L1_SFTs, key2_L1_timestamps_GPS = group1_L1.keys()
+#
+#     # Data
+#     dataset_H1_SFTs = group1_H1[key2_H1_SFTs]
+#     dataset_H1_timestamps_GPS = group1_H1[key2_H1_timestamps_GPS]
+#
+#     dataset_L1_SFTs = group1_L1[key2_L1_SFTs]
+#     dataset_L1_timestamps_GPS = group1_L1[key2_L1_timestamps_GPS]
+#
+#     dataset_frequency_Hz = group0[key1_frequency_Hz]
+#
+#     return dataset_H1_SFTs, dataset_H1_timestamps_GPS, dataset_L1_SFTs, dataset_L1_timestamps_GPS, dataset_frequency_Hz
 
 def plot_spectrogram(amplitude):
     plt.title('Spectrogram')
@@ -62,28 +64,30 @@ if __name__ == '__main__':
 
     # files = ["./data/001121a05.hdf5", "./data/01bcf6533.hdf5"]
     # files_id = ["001121a05", "01bcf6533"]
-
+    BATCH_SIZE = 64
 
     label_file = pd.read_csv("data/label/train_labels.csv")
+    label_file_train, label_file_val = train_test_split(label_file, test_size=0.2)
 
-    x_train = []
-    y_train = []
-    for file in os.listdir("./data/train/"):
-        x_train.append(np.array(read_data_from_hdf5("./data/train/"+file)[0])[:,:4096])
-        y_train.append(label_file[label_file["id"] == os.path.splitext(file)[0]]["target"].values[0])
 
-    x_train = np.abs(x_train)
-    x_train = np.divide(np.subtract(x_train.T, np.mean(x_train, axis=(1,2))), (np.std(x_train, axis=(1,2))) ).T
-    y_train = np.array(y_train)
+    traingen = CustomDataGen(label_file_train, BATCH_SIZE)
+    valgen = CustomDataGen(label_file_val, BATCH_SIZE)
+    # x_train = []
+    # y_train = []
+    # for file in os.listdir("./data/train/"):
+    #     x_train.append(np.array(read_data_from_hdf5("./data/train/"+file)[0])[:,:4096])
+    #     y_train.append(label_file[label_file["id"] == os.path.splitext(file)[0]]["target"].values[0])
+    #
+    # x_train = np.abs(x_train)
+    # x_train = np.divide(np.subtract(x_train.T, np.mean(x_train, axis=(1,2))), (np.std(x_train, axis=(1,2))) ).T
+    # y_train = np.array(y_train)
 
     object = Model()
     model_perceptron = object.get_model("perceptron")
 
     model_perceptron.summary()
-    print(x_train.shape)
-    print(y_train.shape)
 
-    model_perceptron.fit(x_train, y_train, epochs=10)
+    model_perceptron.fit(traingen, validation_data=valgen, epochs=2)
 
     # H1_SFTs, H1_timestamps_GPS, *_, frequency_Hz = read_data_from_hdf5(filename)
 
