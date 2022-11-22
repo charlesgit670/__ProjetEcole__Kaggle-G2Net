@@ -4,18 +4,23 @@ import h5py
 
 class CustomDataGen(tf.keras.utils.Sequence):
 
-    def __init__(self, df, batch_size, shuffle=True):
+    def __init__(self, data_type, df, batch_size):
+        self.data_type = data_type
         self.df = df.copy()
         self.batch_size = batch_size
-        self.shuffle = shuffle
-
         self.n = len(self.df)
 
     def __len__(self):
-        return self.n // self.batch_size
+        if self.n % self.batch_size == 0:
+            return self.n // self.batch_size
+        else:
+            return (self.n // self.batch_size)+1
 
     def __getitem__(self, index):
-        batches = self.df[index * self.batch_size:(index + 1) * self.batch_size]
+        if (self.n // self.batch_size) + 1 == index:
+            batches = self.df[(index-1) * self.batch_size:-1]
+        else:
+            batches = self.df[index * self.batch_size:(index + 1) * self.batch_size]
         X, y = self.__get_data(batches)
         return X, y
 
@@ -44,14 +49,27 @@ class CustomDataGen(tf.keras.utils.Sequence):
 
     def __get_data(self, batches):
 
-        path_batch = "./data/train/" + batches["id"] + ".hdf5"
+        path_batch = "data/"+self.data_type+"/"+batches["id"]+".hdf5"
+        # path_batch = "D:\\\\DL_data\\G2Net\\"+batches["id"]+".hdf5"
         label_batch = batches["target"]
 
-        X_batch = np.asarray([self.__get_input(x) for x in path_batch]).astype(np.float64)
-        X_batch = np.abs(X_batch)
-        X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2))), (np.std(X_batch, axis=(1, 2)))).T
+        X_batch = np.asarray([self.__get_input(x) for x in path_batch])
+        X_batch = np.abs(X_batch)*1e22
+        X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2))),
+                            (np.std(X_batch, axis=(1, 2)))).T
 
         y_batch = np.array(label_batch)
 
         return X_batch, y_batch
+
+
+# Structure des données au format hdf5
+# <HDF5 group "/001121a05" (3 members)>
+# ----><HDF5 group "/001121a05/H1" (2 members)>
+# ---------><HDF5 dataset "SFTs": shape (360, 4612), type "<c8">
+# ---------><HDF5 dataset "timestamps_GPS": shape (4612,), type "<i8">
+# ----><HDF5 group "/001121a05/L1" (2 members)>
+# ---------><HDF5 dataset "SFTs": shape (360, 4653), type "<c8">
+# ---------><HDF5 dataset "timestamps_GPS": shape (4653,), type "<i8">
+# ----><HDF5 dataset "frequency_Hz": shape (360,), type "<f8">
 
