@@ -1,4 +1,5 @@
 from tensorflow.keras import layers,models
+import tensorflow as tf
 
 
 class Model:
@@ -7,6 +8,8 @@ class Model:
         match name:
             case "perceptron":
                 model = self.__perceptron()
+            case "efficientNet7":
+                model = self.__efficientNet7()
             case default:
                 raise Exception(name+" : This model is not supported")
         if load_weights:
@@ -21,6 +24,15 @@ class Model:
             layers.Flatten(input_shape=(360,4096,1)),
             layers.Dense(1, activation="sigmoid")
         ])
-        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
 
+        return model
+
+    def __efficientNet7(self):
+        model = tf.keras.applications.efficientnet.EfficientNetB7(input_shape=(360,128,1),
+                                                                        include_top=True,
+                                                                        classes=1,
+                                                                        weights=None,
+                                                                        classifier_activation='sigmoid')
+        model.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy', tf.keras.metrics.AUC(curve='PR')])
         return model

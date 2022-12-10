@@ -7,7 +7,7 @@ def plot_spectrogram(amplitude):
     plt.title('Spectrogram')
     plt.xlabel('time')
     plt.ylabel('frequency')
-    plt.imshow(amplitude)
+    plt.imshow(amplitude[:,0:200])
     plt.colorbar()
     plt.show()
 
@@ -44,7 +44,7 @@ def read_data_from_hdf5(path):
 
 if __name__ == '__main__':
     filename = "./data/train/001121a05.hdf5" # label 1
-    # filename = "./data/01bcf6533.hdf5"  # label 0
+    # filename = "./data/train/01bcf6533.hdf5"  # label 0
 
     H1_SFTs, H1_timestamps_GPS, *_, frequency_Hz = read_data_from_hdf5(filename)
 
@@ -66,4 +66,4 @@ if __name__ == '__main__':
 
     # H1_SFTs_normalized = np.vectorize(func)(H1_SFTs_normalized)
     plot_spectrogram(H1_SFTs_normalized)
-    plot_aplitude_by_freq(H1_SFTs_normalized)
+    # plot_aplitude_by_freq(H1_SFTs_normalized)

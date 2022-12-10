@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from Model import Model
 from CustomDataGen import CustomDataGen
 

@@ -50,14 +50,13 @@ class CustomDataGen(tf.keras.utils.Sequence):
     def __get_data(self, batches):
 
         path_batch = "data/"+self.data_type+"/"+batches["id"]+".hdf5"
-        # path_batch = "D:\\\\DL_data\\G2Net\\"+batches["id"]+".hdf5"
         label_batch = batches["target"]
 
         X_batch = np.asarray([self.__get_input(x) for x in path_batch])
         X_batch = np.abs(X_batch)*1e22
         X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2))),
                             (np.std(X_batch, axis=(1, 2)))).T
-
+        # X_batch = np.mean(X_batch.reshape(-1,360, 128, 32), axis=2)
         y_batch = np.array(label_batch)
 
         return X_batch, y_batch
