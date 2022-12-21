@@ -21,18 +21,27 @@ class Model:
 
     def __perceptron(self):
         model = models.Sequential([
-            layers.Flatten(input_shape=(360,4096,1)),
-            layers.Dense(1, activation="sigmoid")
+            layers.Flatten(),
+            layers.Dense(1, activation="sigmoid") #0.05
         ])
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
 
         return model
 
     def __efficientNet7(self):
-        model = tf.keras.applications.efficientnet.EfficientNetB7(input_shape=(360,128,1),
-                                                                        include_top=True,
-                                                                        classes=1,
-                                                                        weights=None,
-                                                                        classifier_activation='sigmoid')
-        model.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy', tf.keras.metrics.AUC(curve='PR')])
+
+        input = layers.Input(shape=((360,128, 1)))
+        in_conv = tf.keras.layers.Conv2D(3, 7, strides=(1, 1), padding='same')
+        base = tf.keras.applications.efficientnet_v2.EfficientNetV2S(input_shape=(360,128, 3),
+                                                                        include_top=False,
+                                                                        weights=None)
+        x = in_conv(input)
+        x = base(x)
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+
+        model = tf.keras.Model(inputs=input, outputs=x)
+
+        model.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC', name='ROC'), tf.keras.metrics.AUC(curve='PR', name='PR')])
+
         return model

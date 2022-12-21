@@ -6,9 +6,9 @@ from Model import Model
 from CustomDataGen import CustomDataGen
 
 if __name__ == '__main__':
-    BATCH_SIZE = 16
-    # MODEL_NAME = "efficientNet7"
-    MODEL_NAME = "perceptron"
+    BATCH_SIZE = 32
+    MODEL_NAME = "efficientNet7"
+    # MODEL_NAME = "perceptron"
 
     label_file = pd.read_csv("data/train_labels.csv")
     label_file = label_file[label_file["target"] >= 0]
@@ -21,8 +21,8 @@ if __name__ == '__main__':
     object = Model()
     model = object.get_model(MODEL_NAME, False)
 
-    # model.summary()
+    model.summary()
 
-    model.fit(train_gen, validation_data=val_gen, epochs=2,
+    model.fit(train_gen, validation_data=val_gen, epochs=5,
               callbacks=[tf.keras.callbacks.TensorBoard("logs/"+MODEL_NAME)], )
     model.save_weights("model_weights/" + MODEL_NAME + "/" + MODEL_NAME)

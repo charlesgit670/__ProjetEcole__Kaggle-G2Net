@@ -56,7 +56,7 @@ class CustomDataGen(tf.keras.utils.Sequence):
         X_batch = np.abs(X_batch)*1e22
         X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2))),
                             (np.std(X_batch, axis=(1, 2)))).T
-        # X_batch = np.mean(X_batch.reshape(-1,360, 128, 32), axis=2)
+        X_batch = np.mean(X_batch.reshape(-1,360, 128, 32), axis=2)
         y_batch = np.array(label_batch)
 
         return X_batch, y_batch
