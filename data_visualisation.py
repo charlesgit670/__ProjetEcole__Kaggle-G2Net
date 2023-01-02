@@ -124,20 +124,61 @@ def reduce_noise(file_path_image):
 
     plt.show()
 
+def transform_image(file_path_image, split = 100):
+    H1_SFTs, _, L1_SFTs, *_ = read_data_from_hdf5(file_path_image)
+
+    H1_SFTs = np.abs(np.array(H1_SFTs)) * 1e22  # on récupère le spectre d'amplitude
+    L1_SFTs = np.abs(np.array(L1_SFTs)) * 1e22
+
+    H1_SFTs_normalized = (H1_SFTs - np.mean(H1_SFTs, axis=(0, 1))) / (np.std(H1_SFTs, axis=(0, 1)))
+    H1_SFTs_normalized = np.mean(H1_SFTs_normalized[:, :4096].reshape(360, 128, 32), axis=2)
+
+    L1_SFTs_normalized = (L1_SFTs - np.mean(L1_SFTs, axis=(0, 1))) / (np.std(L1_SFTs, axis=(0, 1)))
+    L1_SFTs_normalized = np.mean(L1_SFTs_normalized[:, :4096].reshape(360, 128, 32), axis=2)
+
+    amplitude_min_H1 = H1_SFTs_normalized.min()
+    amplitude_max_H1 = H1_SFTs_normalized.max()
+    step_H1 = (amplitude_max_H1 - amplitude_min_H1) / split
+    amplitude_min_L1 = L1_SFTs_normalized.min()
+    amplitude_max_L1 = L1_SFTs_normalized.max()
+    step_L1 = (amplitude_max_L1 - amplitude_min_L1) / split
+
+    H1_SFTs_transform = np.zeros((split+1,128))
+    L1_SFTs_transform = np.zeros((split+1,128))
+
+    for i in range(128):
+        for j in range(360):
+            H1_SFTs_transform[int((H1_SFTs_normalized[j,i] - amplitude_min_H1) // step_H1), i] += 1
+            L1_SFTs_transform[int((L1_SFTs_normalized[j,i] - amplitude_min_L1) // step_L1), i] += 1
+
+
+    fig, axs = plt.subplots(2, 2)
+    im1 = axs[0, 0].imshow(H1_SFTs_normalized, aspect="auto")
+    axs[0, 0].set_title('H1')
+    plt.colorbar(im1, ax=axs[0, 0])
+    im2 = axs[0, 1].imshow(L1_SFTs_normalized, aspect="auto")
+    axs[0, 1].set_title('L1')
+    plt.colorbar(im2, ax=axs[0, 1])
+    im3 = axs[1, 0].imshow(H1_SFTs_transform, aspect="auto")
+    axs[1, 0].set_title('H1 transform')
+    plt.colorbar(im3, ax=axs[1, 0])
+    im4 = axs[1, 1].imshow(L1_SFTs_transform, aspect="auto")
+    axs[1, 1].set_title('L1 transform')
+    plt.colorbar(im4, ax=axs[1, 1])
+
+    plt.show()
+
 if __name__ == '__main__':
-    filename = "./data/train/00f36a6ac.hdf5" # label 1
+    # filename = "./data/train/00f36a6ac.hdf5" # label 1
     # filename = "./data/train/01bcf6533.hdf5"  # label 0
     # filename = "data/test/3cc6680fb.hdf5"
     # filename = "data/test/2083f23b4.hdf5"
+    filename = "data/test/00222d97b.hdf5"
     # reduce_noise(filename)
     # plot_spectrogram(L1_SFTs_normalized)
-    H1_SFTs, *_ = read_data_from_hdf5(filename)
-    H1_SFTs = np.abs(np.array(H1_SFTs)) * 1e22
-
-    H1_SFTs_normalized = np.mean(H1_SFTs[:, :4096].reshape(360, 128, 32), axis=2)
-    H1_SFTs_normalized = (H1_SFTs_normalized - np.mean(H1_SFTs_normalized, axis=(0, 1))) / (np.std(H1_SFTs_normalized, axis=(0, 1)))
     # H1_SFTs_normalized = np.mean(H1_SFTs_normalized.T.reshape(64, 180, 2), axis=2).T
-    plot_spectrogram(H1_SFTs_normalized)
+    # plot_spectrogram(filename)
+    transform_image(filename,500)
     # input = H1_SFTs_normalized.copy()
 
     # plot_spectrogram(H1_SFTs_normalized)
