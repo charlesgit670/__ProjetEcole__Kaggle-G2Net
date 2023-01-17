@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import h5py
 
-class CustomDataGen(tf.keras.utils.Sequence):
+class DataGenerator(tf.keras.utils.Sequence):
 
     def __init__(self, data_type, df, batch_size):
         self.data_type = data_type
@@ -40,12 +40,15 @@ class CustomDataGen(tf.keras.utils.Sequence):
         dataset_H1_SFTs = group1_H1[key2_H1_SFTs]
         # dataset_H1_timestamps_GPS = group1_H1[key2_H1_timestamps_GPS]
 
-        # dataset_L1_SFTs = group1_L1[key2_L1_SFTs]
+        dataset_L1_SFTs = group1_L1[key2_L1_SFTs]
         # dataset_L1_timestamps_GPS = group1_L1[key2_L1_timestamps_GPS]
 
         # dataset_frequency_Hz = group0[key1_frequency_Hz]
+        dataset_L1_H1_SFTs = np.zeros((360, 4096, 2), dtype=complex)
+        dataset_L1_H1_SFTs[:, :, 0] = np.array(dataset_H1_SFTs)[:, :4096]
+        dataset_L1_H1_SFTs[:, :, 1] = np.array(dataset_L1_SFTs)[:, :4096]
 
-        return dataset_H1_SFTs[:,:4096]
+        return dataset_L1_H1_SFTs
 
     def __get_data(self, batches):
 
@@ -54,9 +57,9 @@ class CustomDataGen(tf.keras.utils.Sequence):
 
         X_batch = np.asarray([self.__get_input(x) for x in path_batch])
         X_batch = np.abs(X_batch)*1e22
-        X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2))),
-                            (np.std(X_batch, axis=(1, 2)))).T
-        # X_batch = np.mean(X_batch.reshape(-1,360, 128, 32), axis=2)
+        X_batch = np.divide(np.subtract(X_batch.T, np.mean(X_batch, axis=(1, 2, 3))),
+                            (np.std(X_batch, axis=(1, 2, 3)))).T
+        X_batch = np.mean(X_batch.reshape(-1,360, 128, 32, 2), axis=3)
         y_batch = np.array(label_batch)
 
         return X_batch, y_batch
