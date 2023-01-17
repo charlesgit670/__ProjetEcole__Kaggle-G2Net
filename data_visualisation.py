@@ -68,7 +68,7 @@ def save_spectrogram():
     negatif_file.progress_apply(lambda row: save_image(row, "negatif"), axis=1)
     positif_file.progress_apply(lambda row: save_image(row, "positif"), axis=1)
 
-def reduce_noise(file_path_image):
+def reduce_noise_and_plot(file_path_image):
     H1_SFTs, _, L1_SFTs, *_ = read_data_from_hdf5(file_path_image)
 
     H1_SFTs = np.abs(np.array(H1_SFTs)) * 1e22  # on récupère le spectre d'amplitude
@@ -124,7 +124,7 @@ def reduce_noise(file_path_image):
 
     plt.show()
 
-def transform_image(file_path_image, split = 100):
+def transform_image_and_plot(file_path_image, split = 100):
     H1_SFTs, _, L1_SFTs, *_ = read_data_from_hdf5(file_path_image)
 
     H1_SFTs = np.abs(np.array(H1_SFTs)) * 1e22  # on récupère le spectre d'amplitude
@@ -170,15 +170,17 @@ def transform_image(file_path_image, split = 100):
 
 if __name__ == '__main__':
     # filename = "./data/train/00f36a6ac.hdf5" # label 1
-    # filename = "./data/train/01bcf6533.hdf5"  # label 0
+    # filename = "./data/train_processed/00f36a6ac.npy"  # label 1
+
+    filename = "./data/train/01bcf6533.hdf5"  # label 0
     # filename = "data/test/3cc6680fb.hdf5"
     # filename = "data/test/2083f23b4.hdf5"
-    filename = "data/test/00222d97b.hdf5"
-    # reduce_noise(filename)
+    # filename = "data/test/00222d97b.hdf5"
+    reduce_noise_and_plot(filename)
     # plot_spectrogram(L1_SFTs_normalized)
     # H1_SFTs_normalized = np.mean(H1_SFTs_normalized.T.reshape(64, 180, 2), axis=2).T
     # plot_spectrogram(filename)
-    transform_image(filename,500)
+    # transform_image(filename,500)
     # input = H1_SFTs_normalized.copy()
 
     # plot_spectrogram(H1_SFTs_normalized)
@@ -223,3 +225,20 @@ if __name__ == '__main__':
     #
     # plt.show()
     # print("a")
+
+    # dataset_H1_SFTs, _, dataset_L1_SFTs, *_ = read_data_from_hdf5(filename)
+
+    # H1 = np.abs(np.array(dataset_H1_SFTs[:,:4096]))*1e22
+    # H1 = (H1 - np.mean(H1, axis=(0,1))/np.std(H1, axis=(0,1)))
+    # H1 = np.mean(H1.reshape(360,128,32), axis=-1)
+    # plot_spectrogram(H1)
+
+    # dataset_L1_H1_SFTs = np.zeros((1, 360, 4096, 2), dtype=complex)
+    # dataset_L1_H1_SFTs[:, :, :, 0] = np.array(dataset_H1_SFTs[:, :4096])
+    # dataset_L1_H1_SFTs[:, :, :, 1] = np.array(dataset_L1_SFTs[:, :4096])
+    #
+    # dataset_L1_H1_SFTs = np.abs(dataset_L1_H1_SFTs)*1e22
+    # dataset_L1_H1_SFTs = np.divide(np.subtract(dataset_L1_H1_SFTs.T, np.mean(dataset_L1_H1_SFTs, axis=(1, 2, 3))),
+    #           (np.std(dataset_L1_H1_SFTs, axis=(1, 2, 3)))).T
+    # dataset_L1_H1_SFTs = np.mean(dataset_L1_H1_SFTs.reshape(-1,360, 128, 32, 2), axis=3)
+    # plot_spectrogram(dataset_L1_H1_SFTs[0,:,:,0])
