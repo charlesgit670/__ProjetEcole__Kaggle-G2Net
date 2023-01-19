@@ -22,7 +22,7 @@ if __name__ == '__main__':
     output = model.predict(test_gen)
 
     if L1_H1_mean:
-        output = L1_H1_mean_convert_output(output)
+        output = L1_H1_mean_convert_output(output, BATCH_SIZE)
 
     test_file["target"] = output
     test_file.to_csv('submission.csv', index=False)

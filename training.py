@@ -2,15 +2,16 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 
 from Model import Model
 from DataGenerator import DataGenerator
 from DataProcessedGenerator import DataProcessedGenerator
 
 def L1_H1_mean_convert_output(output, BATCH_SIZE):
-    rest = len(output) % BATCH_SIZE
+    rest = len(output) % (BATCH_SIZE * 2)
     output_final = []
-    for i in range(0, len(output), BATCH_SIZE * 2):
+    for i in range(0, len(output) - rest, BATCH_SIZE * 2):
         for j in range(i, i + BATCH_SIZE):
             output_final.append((output[j] + output[j + BATCH_SIZE]) / 2)
 
@@ -37,8 +38,8 @@ if __name__ == '__main__':
     object = Model()
     model = object.get_model(MODEL_NAME, False, CHANNEL)
 
-    model.summary()
-    EPOCHS = 5
+    # model.summary()
+    EPOCHS = 10
     checkpoint_filepath = "model_weights/" + MODEL_NAME + "/" + MODEL_NAME
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
@@ -56,8 +57,8 @@ if __name__ == '__main__':
         output_train = L1_H1_mean_convert_output(output_train, BATCH_SIZE)
         output_test = L1_H1_mean_convert_output(output_test, BATCH_SIZE)
 
-    for i in range(1,20):
-        threshold = i*0.05
+    for i in range(1,100):
+        threshold = i*0.01
         output_train_predict = np.where(output_train > threshold, 1, 0)
         output_test_predict = np.where(output_test > threshold, 1, 0)
         cm_train = tf.math.confusion_matrix(label_file_train["target"],output_train_predict)
@@ -65,3 +66,21 @@ if __name__ == '__main__':
         print("threshold : ",threshold)
         print(cm_train)
         print(cm_test)
+
+    plt.figure(figsize=(15, 8))
+    plt.title('Predicted Target Distribution')
+    pd.DataFrame(output_train, columns = ["target"])["target"].plot(kind='hist', bins=32)
+    plt.xlabel('Count')
+    plt.xlabel('Predicted Target')
+    plt.xlim(0, 1)
+    plt.grid()
+    plt.show()
+
+    plt.figure(figsize=(15, 8))
+    plt.title('Predicted Target Distribution')
+    pd.DataFrame(output_test, columns = ["target"])["target"].plot(kind='hist', bins=32)
+    plt.xlabel('Count')
+    plt.xlabel('Predicted Target')
+    plt.xlim(0, 1)
+    plt.grid()
+    plt.show()
