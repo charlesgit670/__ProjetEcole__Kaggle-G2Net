@@ -39,7 +39,7 @@ if __name__ == '__main__':
     model = object.get_model(MODEL_NAME, False, CHANNEL)
 
     # model.summary()
-    EPOCHS = 10
+    EPOCHS = 20
     checkpoint_filepath = "model_weights/" + MODEL_NAME + "/" + MODEL_NAME
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         print(cm_test)
 
     plt.figure(figsize=(15, 8))
-    plt.title('Predicted Target Distribution')
+    plt.title('Predicted Target Distribution train')
     pd.DataFrame(output_train, columns = ["target"])["target"].plot(kind='hist', bins=32)
     plt.xlabel('Count')
     plt.xlabel('Predicted Target')
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     plt.show()
 
     plt.figure(figsize=(15, 8))
-    plt.title('Predicted Target Distribution')
+    plt.title('Predicted Target Distribution test')
     pd.DataFrame(output_test, columns = ["target"])["target"].plot(kind='hist', bins=32)
     plt.xlabel('Count')
     plt.xlabel('Predicted Target')
