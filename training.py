@@ -22,24 +22,24 @@ def L1_H1_mean_convert_output(output, BATCH_SIZE):
 
 
 if __name__ == '__main__':
-    BATCH_SIZE = 8
-    MODEL_NAME = "efficientNet7"
+    BATCH_SIZE = 64
+    MODEL_NAME = "efficientNetV2S"
     L1_H1_mean = False # moyenne de L1 et H1 en sortie du modèle si True
     CHANNEL = 1 if L1_H1_mean else 2
 
-    label_file = pd.read_csv("data/train_labels.csv")
+    label_file = pd.read_csv("data/train_labels_generated.csv")
     label_file = label_file[label_file["target"] >= 0]
 
     label_file_train, label_file_val = train_test_split(label_file, test_size=0.2, random_state=42)
 
-    train_gen = DataProcessedGenerator("train_processed", label_file_train, BATCH_SIZE, L1_H1_mean=L1_H1_mean)
-    val_gen = DataProcessedGenerator("train_processed", label_file_val, BATCH_SIZE, L1_H1_mean=L1_H1_mean)
+    train_gen = DataProcessedGenerator("train_generated", label_file_train, BATCH_SIZE, L1_H1_mean=L1_H1_mean)
+    val_gen = DataProcessedGenerator("train_generated", label_file_val, BATCH_SIZE, L1_H1_mean=L1_H1_mean)
 
     object = Model()
     model = object.get_model(MODEL_NAME, False, CHANNEL)
 
     # model.summary()
-    EPOCHS = 20
+    EPOCHS = 10
     checkpoint_filepath = "model_weights/" + MODEL_NAME + "/" + MODEL_NAME
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
@@ -57,15 +57,13 @@ if __name__ == '__main__':
         output_train = L1_H1_mean_convert_output(output_train, BATCH_SIZE)
         output_test = L1_H1_mean_convert_output(output_test, BATCH_SIZE)
 
-    for i in range(1,100):
-        threshold = i*0.01
-        output_train_predict = np.where(output_train > threshold, 1, 0)
-        output_test_predict = np.where(output_test > threshold, 1, 0)
-        cm_train = tf.math.confusion_matrix(label_file_train["target"],output_train_predict)
-        cm_test = tf.math.confusion_matrix(label_file_val["target"], output_test_predict)
-        print("threshold : ",threshold)
-        print(cm_train)
-        print(cm_test)
+    output_train_predict = np.where(output_train > 0.5, 1, 0)
+    output_test_predict = np.where(output_test > 0.5, 1, 0)
+    cm_train = tf.math.confusion_matrix(label_file_train["target"], output_train_predict)
+    cm_test = tf.math.confusion_matrix(label_file_val["target"], output_test_predict)
+    print("threshold : ", 0.5)
+    print(cm_train)
+    print(cm_test)
 
     plt.figure(figsize=(15, 8))
     plt.title('Predicted Target Distribution train')

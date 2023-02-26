@@ -92,18 +92,8 @@ def generate_cw(id):
 
     np.save(f"data_signal/signal_snr_{int(snr)}_{id}.npy", signals)
 
-    # Remove Temp Files
-    # dir = "."
-    #
-    # for file_path in glob.glob(os.path.join(dir, '*.sft')):
-    #     os.remove(file_path)
-    # for file_path in glob.glob(os.path.join(dir, '*.cff')):
-    #     os.remove(file_path)
-    # for file_path in glob.glob(os.path.join(dir, '*.csv')):
-    #     os.remove(file_path)
 
 if __name__ == '__main__':
-    # generate_cw(0)
     # Generate samples in parallel
     NUMBER_OF_PROCESSES = multiprocessing.cpu_count()
     print(NUMBER_OF_PROCESSES)

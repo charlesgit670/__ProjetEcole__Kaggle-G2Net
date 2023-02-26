@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import h5py
 import numpy as np
 import pandas as pd
@@ -6,12 +7,13 @@ from PIL import Image
 from tqdm import tqdm
 import random
 
+
 def plot_spectrogram(amplitude):
     plt.title('Spectrogram')
     plt.xlabel('time')
     plt.ylabel('frequency')
-    # plt.imshow(amplitude, aspect="auto")
-    plt.imshow(amplitude)
+    plt.imshow(amplitude, aspect="auto")
+    # plt.imshow(amplitude)
     plt.colorbar()
     plt.show()
 
@@ -48,7 +50,7 @@ def read_data_from_hdf5(path):
 
 def normalize(data):
     data = np.abs(np.array(data)) * 1e22
-    data = (data - np.mean(data, axis=0))/(np.std(data, axis=0))
+    data = (data - np.mean(data, axis=(0,1)))/(np.std(data, axis=(0,1)))
     return data
 def save_spectrogram():
     tqdm.pandas()
@@ -109,16 +111,16 @@ def reduce_noise_and_plot(file_path_image):
     L1_SFTs_clean_normalized = np.mean(L1_SFTs_clean_normalized[:, :4096].reshape(360, 128, 32), axis=2)
 
     fig, axs = plt.subplots(2, 2)
-    im1 = axs[0, 0].imshow(H1_SFTs_normalized)
+    im1 = axs[0, 0].imshow(H1_SFTs_normalized, aspect="auto")
     axs[0, 0].set_title('H1')
     plt.colorbar(im1, ax=axs[0, 0])
-    im2 = axs[0, 1].imshow(L1_SFTs_normalized)
+    im2 = axs[0, 1].imshow(L1_SFTs_normalized, aspect="auto")
     axs[0, 1].set_title('L1')
     plt.colorbar(im2, ax=axs[0, 1])
-    im3 = axs[1, 0].imshow(H1_SFTs_clean_normalized)
+    im3 = axs[1, 0].imshow(H1_SFTs_clean_normalized, aspect="auto")
     axs[1, 0].set_title('H1 clean')
     plt.colorbar(im3, ax=axs[1, 0])
-    im4 = axs[1, 1].imshow(L1_SFTs_clean_normalized)
+    im4 = axs[1, 1].imshow(L1_SFTs_clean_normalized, aspect="auto")
     axs[1, 1].set_title('L1 clean')
     plt.colorbar(im4, ax=axs[1, 1])
 
@@ -168,77 +170,55 @@ def transform_image_and_plot(file_path_image, split = 100):
 
     plt.show()
 
+def reduce_noise_by_similarity(file_path_image):
+    def find_closest_noise(row, input):
+        filename = f'./data/test_processed/{row["id"]}.npy'
+        H1 = np.load(filename)[:,:,0]
+        diff = abs(np.sum(abs(H1 - input)))
+        row["diff"] = diff
+        return row
+
+    id = file_path_image.split(".")[0].split("/")[-1]
+    H1_input = np.load(f'./data/test_processed/{id}.npy')[:,:,0]
+
+    label_file = pd.read_csv("data/sample_submission.csv")
+    label_file = label_file[(label_file.id != id)].reset_index(drop=True) #(label_file.index < 2000) &
+
+    tqdm.pandas()
+    label_file = label_file.progress_apply(lambda row: find_closest_noise(row, H1_input), axis=1)
+    id_find = np.argmin(label_file["diff"], axis=0)
+    row_find = label_file.loc[id_find]
+    H1_to_substract = np.load(f'./data/test_processed/{row_find["id"]}.npy')[:,:,0]
+
+    H1_diff = H1_input - H1_to_substract
+
+    gs = gridspec.GridSpec(2, 4)
+    gs.update(wspace=0.5)
+    ax1 = plt.subplot(gs[0, :2], )
+    ax2 = plt.subplot(gs[0, 2:])
+    ax3 = plt.subplot(gs[1, 1:3])
+
+    # fig, axs = plt.subplots(2, 2)
+    im1 = ax1.imshow(H1_input, aspect="auto")
+    ax1.set_title('H1 initial')
+    plt.colorbar(im1, ax=ax1)
+    im2 = ax2.imshow(H1_to_substract, aspect="auto")
+    ax2.set_title('H1 similar')
+    plt.colorbar(im2, ax=ax2)
+    im3 = ax3.imshow(H1_diff, aspect="auto")
+    ax3.set_title('H1 diff')
+    plt.colorbar(im3, ax=ax3)
+
+    plt.show()
+
 if __name__ == '__main__':
     # filename = "./data/train/00f36a6ac.hdf5" # label 1
     # filename = "./data/train_processed/00f36a6ac.npy"  # label 1
-
-    filename = "./data/train/01bcf6533.hdf5"  # label 0
-    # filename = "data/test/3cc6680fb.hdf5"
+    # filename = "./data/train/02c8f43f3.hdf5"
+    # filename = "./data/train/01bcf6533.hdf5"  # label 0
+    filename = "data/test/3cc6680fb.hdf5"
     # filename = "data/test/2083f23b4.hdf5"
     # filename = "data/test/00222d97b.hdf5"
-    reduce_noise_and_plot(filename)
-    # plot_spectrogram(L1_SFTs_normalized)
-    # H1_SFTs_normalized = np.mean(H1_SFTs_normalized.T.reshape(64, 180, 2), axis=2).T
-    # plot_spectrogram(filename)
-    # transform_image(filename,500)
-    # input = H1_SFTs_normalized.copy()
 
-    # plot_spectrogram(H1_SFTs_normalized)
-    # plot_aplitude_by_freq(H1_SFTs_normalized)
-    # save_spectrogram()
-
-    # label_file = pd.read_csv("data/sample_submission.csv")
-    # label_file = label_file[(label_file.index < 2000) & (label_file.index != 1891)]
-    #
-    # def find_closest_noise(row, input):
-    #     filename = f'./data/test/{row["id"]}.hdf5'
-    #     H1_SFTs_iter, *_, frequency_Hz_iter = read_data_from_hdf5(filename)
-    #     frequency_Hz_iter = np.array(frequency_Hz_iter)
-    #     H1_SFTs_iter = np.abs(np.array(H1_SFTs_iter)) * 1e22
-    #     H1_SFTs_normalized_iter = (H1_SFTs_iter - np.mean(H1_SFTs_iter, axis=(0, 1))) / (np.std(H1_SFTs_iter, axis=(0, 1)))
-    #     H1_SFTs_normalized_iter = np.mean(H1_SFTs_normalized_iter[:, :4096].reshape(360, 128, 32), axis=2)
-    #
-    #     diff = abs(np.sum(abs(frequency_Hz_iter - input)))
-    #     row["diff"] = diff
-    #     return row
-    #
-    #
-    # tqdm.pandas()
-    # label_file = label_file.progress_apply(lambda row: find_closest_noise(row, input), axis=1)
-    # id_find = np.argmin(label_file["diff"], axis=0)
-    # row_find = label_file.loc[id_find]
-    # filename_diff = f'./data/test/{row_find["id"]}.hdf5'
-    # # filename_diff = f'./data/test/575f47724.hdf5'
-    # H1_SFTs_diff, *_, frequency_diff = read_data_from_hdf5(filename_diff)
-    # frequency_diff = np.array(frequency_diff)
-    # H1_SFTs_diff = np.abs(np.array(H1_SFTs_diff)) * 1e22
-    # H1_SFTs_normalized_diff = (H1_SFTs_diff - np.mean(H1_SFTs_diff, axis=(0, 1))) / (np.std(H1_SFTs_diff, axis=(0, 1)))
-    # H1_SFTs_normalized_diff = np.mean(H1_SFTs_normalized_diff[:, :4096].reshape(360, 128, 32), axis=2)
-    #
-    # H1_SFTs_normalized_result = H1_SFTs_normalized - H1_SFTs_normalized_diff
-    #
-    # a = [H1_SFTs_normalized, H1_SFTs_normalized_diff, H1_SFTs_normalized_result]
-    # plt.figure(figsize=(24, 4))
-    # for i in range(len(a)):
-    #     ax = plt.subplot(1, 4, i + 1)
-    #     ax.imshow(a[i], aspect="auto", cmap="Greys")
-    #
-    # plt.show()
-    # print("a")
-
-    # dataset_H1_SFTs, _, dataset_L1_SFTs, *_ = read_data_from_hdf5(filename)
-
-    # H1 = np.abs(np.array(dataset_H1_SFTs[:,:4096]))*1e22
-    # H1 = (H1 - np.mean(H1, axis=(0,1))/np.std(H1, axis=(0,1)))
-    # H1 = np.mean(H1.reshape(360,128,32), axis=-1)
-    # plot_spectrogram(H1)
-
-    # dataset_L1_H1_SFTs = np.zeros((1, 360, 4096, 2), dtype=complex)
-    # dataset_L1_H1_SFTs[:, :, :, 0] = np.array(dataset_H1_SFTs[:, :4096])
-    # dataset_L1_H1_SFTs[:, :, :, 1] = np.array(dataset_L1_SFTs[:, :4096])
-    #
-    # dataset_L1_H1_SFTs = np.abs(dataset_L1_H1_SFTs)*1e22
-    # dataset_L1_H1_SFTs = np.divide(np.subtract(dataset_L1_H1_SFTs.T, np.mean(dataset_L1_H1_SFTs, axis=(1, 2, 3))),
-    #           (np.std(dataset_L1_H1_SFTs, axis=(1, 2, 3)))).T
-    # dataset_L1_H1_SFTs = np.mean(dataset_L1_H1_SFTs.reshape(-1,360, 128, 32, 2), axis=3)
-    # plot_spectrogram(dataset_L1_H1_SFTs[0,:,:,0])
+    dataset_H1_SFTs, dataset_H1_timestamps_GPS, dataset_L1_SFTs, dataset_L1_timestamps_GPS, dataset_frequency_Hz_ = read_data_from_hdf5(filename)
+    plot_spectrogram(np.abs(dataset_H1_SFTs)*1e22)

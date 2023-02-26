@@ -11,8 +11,8 @@ class Model:
         match name:
             case "perceptron":
                 model = self.__perceptron()
-            case "efficientNet7":
-                model = self.__efficientNet7(channel)
+            case "efficientNetV2S":
+                model = self.__efficientNetV2S(channel)
             case default:
                 raise Exception(name+" : This model is not supported")
         if load_weights:
@@ -24,30 +24,36 @@ class Model:
 
     def __perceptron(self):
         model = models.Sequential([
+            # self.__data_augmentation,
             layers.Flatten(),
-            layers.Dense(1, activation="sigmoid")
+            layers.Dense(1, activation="sigmoid", kernel_regularizer=tf.keras.regularizers.L2(0.01), kernel_initializer=tf.keras.initializers.GlorotUniform(seed=1))
         ])
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC', name='ROC'), tf.keras.metrics.AUC(curve='PR', name='PR')])
 
         return model
 
-    def __efficientNet7(self, channel):
+    def __efficientNetV2S(self, channel):
         input = layers.Input(shape=((360, 128,channel)))
-        x = self.__data_augmentation(input)
-        x = layers.Conv2D(3, 3, padding='same')(x)
+        # x = self.__data_augmentation(input)
+        x = layers.Conv2D(3, 3, padding='same', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=1))(input)
         x = tf.keras.applications.efficientnet_v2.EfficientNetV2S(input_shape=(360,128,3),
                                                                         include_top=False,
                                                                         weights='imagenet'
                                                                         )(x)
         x = layers.GlobalAveragePooling2D()(x)
         x = layers.Dropout(0.3)(x)
-        output = layers.Dense(1, activation='sigmoid')(x)
+        output = layers.Dense(1, activation='sigmoid', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=1))(x)
 
         model = tf.keras.Model(inputs=input, outputs=output)
 
-        model.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC', name='ROC'), tf.keras.metrics.AUC(curve='PR', name='PR')])
+        lr_decay = tf.keras.optimizers.schedules.ExponentialDecay(
+            0.0001, 2500, 0.01, staircase=False, name=None
+        )
+        adam = tf.keras.optimizers.Adam(lr_decay)
+        model.compile(optimizer=adam, loss='binary_crossentropy',metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC', name='ROC'), tf.keras.metrics.AUC(curve='PR', name='PR')])
 
         return model
+
 
 
 

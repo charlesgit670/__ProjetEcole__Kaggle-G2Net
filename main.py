@@ -9,8 +9,8 @@ from training import L1_H1_mean_convert_output
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "efficientNet7"
-    BATCH_SIZE = 32
+    MODEL_NAME = "efficientNetV2S"
+    BATCH_SIZE = 64
     L1_H1_mean = False
     CHANNEL = 1 if L1_H1_mean else 2
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     test_file["target"] = output
     test_file.to_csv('submission.csv', index=False)
 
-    # Sanity check, predicted target distribution
+    # predicted target distribution
     plt.figure(figsize=(15, 8))
     plt.title('Predicted Target Distribution')
     test_file['target'].plot(kind='hist', bins=32)
