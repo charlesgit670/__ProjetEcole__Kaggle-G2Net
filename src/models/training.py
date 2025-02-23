@@ -4,9 +4,8 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Model import Model
-from DataGenerator import DataGenerator
-from DataProcessedGenerator import DataProcessedGenerator
+from src.models.Model import Model
+from src.data_generator.DataProcessedGenerator import DataProcessedGenerator
 
 def L1_H1_mean_convert_output(output, BATCH_SIZE):
     rest = len(output) % (BATCH_SIZE * 2)
@@ -27,7 +26,7 @@ if __name__ == '__main__':
     L1_H1_mean = False # moyenne de L1 et H1 en sortie du modèle si True
     CHANNEL = 1 if L1_H1_mean else 2
 
-    label_file = pd.read_csv("data/train_labels_generated.csv")
+    label_file = pd.read_csv("../../data/train_labels_generated.csv")
     label_file = label_file[label_file["target"] >= 0]
 
     label_file_train, label_file_val = train_test_split(label_file, test_size=0.2, random_state=42)
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     object = Model()
     model = object.get_model(MODEL_NAME, False, CHANNEL)
 
-    # model.summary()
+    # models.summary()
     EPOCHS = 10
     checkpoint_filepath = "model_weights/" + MODEL_NAME + "/" + MODEL_NAME
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(

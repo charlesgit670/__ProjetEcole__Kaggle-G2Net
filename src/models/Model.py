@@ -14,12 +14,12 @@ class Model:
             case "efficientNetV2S":
                 model = self.__efficientNetV2S(channel)
             case default:
-                raise Exception(name+" : This model is not supported")
+                raise Exception(name+" : This models is not supported")
         if load_weights:
             try:
                 model.load_weights("model_weights/"+name+"/"+name)
             except Exception:
-                raise Exception("Error while trying to load weights for the model : /model_weights/"+name+"/"+name)
+                raise Exception("Error while trying to load weights for the models : /model_weights/"+name+"/"+name)
         return model
 
     def __perceptron(self):

@@ -1,11 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
-from Model import Model
-from DataGenerator import DataGenerator
-from DataProcessedGenerator import DataProcessedGenerator
-from training import L1_H1_mean_convert_output
+from src.models.Model import Model
+from src.data_generator.DataProcessedGenerator import DataProcessedGenerator
+from src.models.training import L1_H1_mean_convert_output
 
 
 if __name__ == '__main__':

@@ -1,10 +1,9 @@
-import h5py
 import numpy as np
 from tqdm import tqdm
 import os
 import random
 
-from data_visualisation import read_data_from_hdf5
+from src.visualization.data_visualization import read_data_from_hdf5
 
 
 def reduce_noise(H1_L1):
@@ -42,12 +41,12 @@ def save_data(data_path, data_processed_path, reduce_noise_param=False):
         np.save(os.path.join(data_processed_path,file.split(".")[0]+".npy"), H1_L1)
 
 if __name__ == '__main__':
-    data_train_path = "data/train/"
-    data_test_path = "data/test/"
+    data_train_path = "../../data/train/"
+    data_test_path = "../../data/test/"
 
-    data_train_processed_path = "data/train_processed"
-    data_test_processed_path = "data/test_processed"
-    data_test_clean_path = "data/test_clean"
+    data_train_processed_path = "../../data/train_processed"
+    data_test_processed_path = "../../data/test_processed"
+    data_test_clean_path = "../../data/test_clean"
 
     # save_data(data_train_path, data_train_processed_path)
     save_data(data_test_path, data_test_clean_path, reduce_noise_param=True)

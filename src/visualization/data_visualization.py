@@ -54,7 +54,7 @@ def normalize(data):
     return data
 def save_spectrogram():
     tqdm.pandas()
-    label_file = pd.read_csv("data/train_labels.csv")
+    label_file = pd.read_csv("../../data/train_labels.csv")
     negatif_file = label_file[label_file["target"] == 0]
     positif_file = label_file[label_file["target"] == 1]
 
@@ -181,7 +181,7 @@ def reduce_noise_by_similarity(file_path_image):
     id = file_path_image.split(".")[0].split("/")[-1]
     H1_input = np.load(f'./data/test_processed/{id}.npy')[:,:,0]
 
-    label_file = pd.read_csv("data/sample_submission.csv")
+    label_file = pd.read_csv("../../data/sample_submission.csv")
     label_file = label_file[(label_file.id != id)].reset_index(drop=True) #(label_file.index < 2000) &
 
     tqdm.pandas()
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     # filename = "./data/train_processed/00f36a6ac.npy"  # label 1
     # filename = "./data/train/02c8f43f3.hdf5"
     # filename = "./data/train/01bcf6533.hdf5"  # label 0
-    filename = "data/test/3cc6680fb.hdf5"
+    filename = "../../data/test/3cc6680fb.hdf5"
     # filename = "data/test/2083f23b4.hdf5"
     # filename = "data/test/00222d97b.hdf5"
 
