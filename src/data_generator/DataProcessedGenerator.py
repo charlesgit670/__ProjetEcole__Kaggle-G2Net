@@ -26,7 +26,7 @@ class DataProcessedGenerator(tf.keras.utils.Sequence):
 
     def __get_data(self, batches):
 
-        path_batch = "data/"+self.data_type+"/"+batches["id"]+".npy"
+        path_batch = "../../data/"+self.data_type+"/"+batches["id"]+".npy"
         label_batch = batches["target"]
 
         X_batch = np.asarray([np.load(x) for x in path_batch])
